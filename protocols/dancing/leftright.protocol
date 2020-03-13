@@ -1,0 +1,9 @@
+--LOOP_DEFAULT
+--PARAM:x:number
+local params = ...
+print("x is " .. tostring(params.x))
+
+turtle.turnLeft()
+os.sleep(0.5)
+turtle.turnRight()
+os.sleep(0.5)

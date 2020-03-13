@@ -1,0 +1,19 @@
+--PARAM:item_name:string
+--PARAM:drop_all:boolean
+local utility = dofile("/protocols/farming/utility.lua")
+local params, turtleUtility, sendMessage = ...
+
+local data = utility.load()
+
+if not params.drop_all and turtleUtility:totalCountOf(params.item_name) == 0 then
+	sendMessage("I dont have \"" .. params.item_name .. "\"")
+	return false, "Item not found"
+end
+
+turtleUtility:gotoPoint(data.chestCoords.x, data.chestCoords.y + 1, data.chestCoords.z)
+
+if params.drop_all then
+	turtleUtility:emptyInventory()
+else
+	turtleUtility:emptyInventory({ params.item_name }, true)
+end

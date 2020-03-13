@@ -1,0 +1,69 @@
+--PARAM:se_corner:string
+--PARAM:nw_corner:string
+--PARAM:chest_coords:string
+--PARAM:seed_name:string
+local params = ...
+local utility = dofile("/protocols/farming/utility.lua")
+
+local southEastParts = string.split(params.se_corner, ",")
+local northWestParts = string.split(params.nw_corner, ",")
+local chestParts = string.split(params.chest_coords, ",")
+
+print("Calling init")
+
+-- If we didn't get exactly three coordinates, then bail
+if #southEastParts ~= 3 then
+	print("Not a se corner")
+	return false, "Bad south east corner" -- Maybe eventually do something cool where we send an error report to the server
+end
+
+if #northWestParts ~= 3 then
+	print("Not a valid nw corner")
+	return false, "Bad north west corner"
+end
+
+if #chestParts ~= 3 then
+	print("Not a valid chest")
+	return false, "No chest given"
+end
+
+if not utility.validateSeed(params.seed_name) then
+	print("Not a valid seed")
+	return false, "Not a valid seed"
+end
+
+-- Convert string parts to numbers
+for i,v in pairs(southEastParts) do
+	southEastParts[i] = tonumber(string.trim(southEastParts[i]))
+end
+
+for i,v in pairs(northWestParts) do
+	northWestParts[i] = tonumber(string.trim(northWestParts[i]))
+end
+
+for i,v in pairs(chestParts) do
+	chestParts[i] = tonumber(string.trim(chestParts[i]))
+end
+
+-- Create the data model
+local data = {
+	southEastCorner = {
+		x = southEastParts[1],
+		y = southEastParts[2],
+		z = southEastParts[3],
+	},
+	northWestCorner = {
+		x = northWestParts[1],
+		y = northWestParts[2],
+		z = northWestParts[3],
+	},
+	chestCoords = {
+		x = chestParts[1],
+		y = chestParts[2],
+		z = chestParts[3],
+	},
+	seedName = params.seed_name,
+}
+
+-- Save the data
+utility.save(data)

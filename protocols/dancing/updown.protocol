@@ -1,0 +1,10 @@
+--PARAM:iterations:number
+print("Beginning updown protocol")
+while numberOfDances < tonumber(PARAMS.iterations) do
+	goup()
+	os.sleep(1)
+	godown()
+	os.sleep(1)
+	numberOfDances = numberOfDances + 1
+end
+numberOfDances = 0

@@ -1,0 +1,163 @@
+local utility = dofile("/protocols/farming/utility.lua")
+local _, turtleUtility = ...
+
+local data = utility.load()
+turtleUtility:clearEquipped()
+
+-- Make sure we've been initialized
+if data == nil then
+	return false, "Farming not initialized"
+end
+
+-- Check that we have water to make the farm with
+if turtleUtility:totalCountOf("minecraft:water_bucket") < 2 then
+	return false, "No water"
+end
+
+-- Check that we have a hoe to hoe the dirt
+if turtleUtility:totalCountOf("minecraft:diamond_hoe") < 1 then
+	return false, "No hoe"
+end
+
+-- Get the corners and make a rectangle
+local rect = {
+	topLeft = {
+		x = data.northWestCorner.x,
+		y = data.northWestCorner.y,
+		z = data.northWestCorner.z,
+	},
+	width = data.southEastCorner.x - data.northWestCorner.x + 1,
+	height = data.southEastCorner.z - data.northWestCorner.z + 1,
+}
+
+-- Go to the northwest corner
+turtleUtility:gotoPoint(rect.topLeft.x, rect.topLeft.y + 1, rect.topLeft.z)
+
+-- Normalize by facing north
+turtleUtility:faceNorth()
+
+-- Turn right twice to face south
+turtle.turnRight()
+turtle.turnRight()
+
+-- Place the dirt, filling out the rectangle, skipping every third column except
+-- for the outline of the rectangle to keep the water in
+for row = 1, rect.height do
+	for col = 1, rect.width do
+		local isOutline = row == 1 or col == 1 or row == rect.height or col == rect.width
+
+		local normalCol = col
+		if row % 2 == 0 then
+			normalCol = (rect.width + 1) - col
+		end
+
+		if isOutline or normalCol % 3 ~= 0 then
+			turtleUtility:placeDown("minecraft:dirt")
+		end
+		turtle.forward()
+	end
+
+	local turnFunc = nil
+	if row % 2 == 0 then
+		turnFunc = turtle.turnRight
+	else
+		turnFunc = turtle.turnLeft
+	end
+
+	turnFunc()
+	turtle.forward()
+	turnFunc()
+	turtle.forward()
+end
+
+-- Go back to the first column
+if rect.height % 2 == 1 then
+	for col = 1, rect.width - 1 do
+		turtle.forward()
+	end
+	turtle.turnLeft()
+else
+	turtle.turnRight()
+end
+
+-- Go back to the first row
+for row = 1, rect.height do
+	turtle.forward()
+end
+
+-- Go back every third column and fill it with water
+turtle.turnLeft()
+for col = 1, rect.width - 1 do
+	if col % 3 == 0 then
+		-- We are on a column that needs to be filled with water
+		-- Fill the first two empty spaces with water, then pick up the
+		-- water in the current space, go forward one, and place the water
+		-- then repeat for the entire canal
+		turtle.turnLeft()
+		turtle.forward()
+		turtleUtility:placeDown("minecraft:water_bucket")
+		turtle.forward()
+		for row = 1, rect.height - 4 do
+			turtleUtility:placeDown("minecraft:water_bucket")
+			turtleUtility:placeDown("minecraft:bucket")
+			turtle.forward()
+		end
+		turtleUtility:placeDown("minecraft:water_bucket")
+
+		turtle.turnRight()
+		turtle.turnRight()
+		turtle.forward()
+		turtleUtility:placeDown("minecraft:bucket")
+		os.sleep(1)
+		turtleUtility:placeDown("minecraft:bucket")
+		for row = 1, rect.height - 3 do
+			turtle.forward()
+		end
+		turtle.turnLeft()
+	end
+	turtle.forward()
+end
+
+-- Select the hoe to farm with
+turtleUtility:selectItem("minecraft:diamond_hoe")
+turtle.equipRight()
+
+-- Go back to the south west corner so we can go through all the dirt
+-- and hoe it
+turtle.turnRight()
+turtle.turnRight()
+for col = 1, rect.width - 1 do
+	turtle.forward()
+end
+
+-- Go over all of the dirt and hoe it
+turtle.turnRight()
+turtle.turnRight()
+turtle.up()
+for row = 1, rect.height do
+	for col = 1, rect.width do
+		local isOutline = row == 1 or col == 1 or row == rect.height or col == rect.width
+
+		local normalCol = col
+		if row % 2 == 0 then
+			normalCol = (rect.width + 1) - col
+		end
+
+		if isOutline or normalCol % 3 ~= 0 then
+			turtle.digDown()
+		end
+		turtle.forward()
+	end
+
+	local turnFunc = nil
+	if row % 2 == 0 then
+		turnFunc = turtle.turnRight
+	else
+		turnFunc = turtle.turnLeft
+	end
+
+	turnFunc()
+	turtle.forward()
+	turnFunc()
+	turtle.forward()
+end
